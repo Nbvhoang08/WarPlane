@@ -6,10 +6,8 @@ public class PlayerMoveMent : MonoBehaviour
 {
      
     public Rigidbody2D Rb;
-
     private float horizontal;
     private float vertical;
-
     private Vector2 joystickVector;
     public float rotationSpeed = 1;
     public float velocity = 1;
@@ -36,19 +34,22 @@ public class PlayerMoveMent : MonoBehaviour
     public Joystick joystick;
 
     // Biến để theo dõi trạng thái quay đầu
-    private bool isTurningBack = false;
+    [SerializeField] private bool isTurningBack = false;
     private Vector3 initialTurnBackPosition;
 
     // Biến để theo dõi camera
     private Camera mainCamera;
     private Vector2 screenBounds;
-
+    public Vector3 viewPos ;
     // Start is called before the first frame update
     void Start()
     {
         Rb = GetComponent<Rigidbody2D>();
         mainCamera = Camera.main;
         screenBounds = mainCamera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, mainCamera.transform.position.z));
+        if(joystick==null){
+            joystick = FindObjectOfType<Joystick>();
+        }
     }
 
     Vector2 velo = Vector2.zero;
@@ -56,6 +57,9 @@ public class PlayerMoveMent : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(joystick==null){
+            joystick = FindObjectOfType<Joystick>();
+        }
         // Lấy đầu vào từ Joystick
         horizontal = joystick.Horizontal;
         vertical = joystick.Vertical;
@@ -74,9 +78,18 @@ public class PlayerMoveMent : MonoBehaviour
         pointer.transform.localPosition = pointerDamp;
 
         // Dash input handling
-        if (Input.GetKeyDown(KeyCode.Space) && canDash)
+        if (Input.GetKeyDown(KeyCode.R) && canDash)
         {
             StartCoroutine(Dash());
+        }
+        
+    }
+    public void Launch()
+    {
+        if (canDash)
+        {
+            StartCoroutine(Dash());
+            SoundManager.Instance.PlayVFXSound(1);
         }
     }
 
@@ -107,12 +120,15 @@ public class PlayerMoveMent : MonoBehaviour
         }
 
         // Kiểm tra xem nhân vật có vượt ra khỏi tầm nhìn của camera hay không
-        Vector3 viewPos = mainCamera.WorldToViewportPoint(transform.position);
+        viewPos = mainCamera.WorldToViewportPoint(transform.position);
         bool outOfBounds = viewPos.x < 0 || viewPos.x > 1 || viewPos.y < 0 || viewPos.y > 1;
-
-        if (outOfBounds && !isTurningBack)
-        {
-            StartCoroutine(TurnBack());
+         // Giới hạn tọa độ X và Y của nhân vật
+        // Vector3 position = transform.position;
+        // position.x = Mathf.Clamp(position.x, -65f, 65f);
+        // position.y = Mathf.Clamp(position.y, -15f, 50f);
+        // transform.position = position;
+        if (outOfBounds && !isTurningBack) { 
+            StartCoroutine(TurnBack()); 
         }
     }
 
@@ -122,29 +138,27 @@ public class PlayerMoveMent : MonoBehaviour
         initialTurnBackPosition = transform.position;
         giveUserControl = false;
 
-        // Quay đầu ngược lại
-        if(targetQuat.eulerAngles.z >-120 && targetQuat.eulerAngles.z >-30 )
+        if(viewPos.y< -0)
         {
-            targetQuat = Quaternion.Euler(0, 0, targetQuat.eulerAngles.z + 180f);
-     
-            while (Vector3.Distance(transform.position, initialTurnBackPosition) < 20f)
-            {
-                Rb.velocity = -transform.right * velocity;
-                yield return null;
-            }
+            targetQuat = Quaternion.Euler(0, 0, 90);
+            
+        }else if(viewPos.y > 1){
+            targetQuat = Quaternion.Euler(0, 0, -90);
+         
+        }else if(viewPos.x< -0)
+        {
+            targetQuat = Quaternion.Euler(0, 0,0);
+            
+        }else if(viewPos.x > 1f){
+            targetQuat = Quaternion.Euler(0, 0, 180);
+            
         }
-        else{
-            while (Vector3.Distance(transform.position, initialTurnBackPosition) < 20f)
-            {
-                Rb.velocity = transform.right * velocity;
+        while (Vector3.Distance(transform.position, initialTurnBackPosition) < 10f)
+        {
+                Rb.velocity = transform.right * velocity; 
                 yield return null;
-            }
-            Debug.Log("2");
         }
-      
-        
 
-        
 
         Rb.velocity = Vector2.zero;
         giveUserControl = true;
@@ -194,15 +208,6 @@ public class PlayerMoveMent : MonoBehaviour
         SetDashTrail(false);
     }
 
-    IEnumerator tempCourou(Vector2 temp)
-    {
-        giveUserControl = false;
-
-        targetQuat = Quaternion.Euler(0, 0, Mathf.Atan2(temp.y, temp.x) * Mathf.Rad2Deg);
-
-        yield return new WaitForSeconds(1f);
-
-        giveUserControl = true;
-    }
+   
 
 }

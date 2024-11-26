@@ -11,11 +11,24 @@ public class PauseCanvas : UICanvas
     public Sprite OffVolume;
 
     [SerializeField] private Image buttonImage;
+    [SerializeField] private GameManager _gameManager;
+    public Text Score;
+    private void Awake()
+    {
+        if (_gameManager == null)
+        {
+            _gameManager = FindObjectOfType<GameManager>();
+        }
+       
+    }
     void Start()
     {
-  
         UpdateButtonImage();
-  
+    }
+    void OnEnable()
+    {
+        Score.text = "Score: " +_gameManager.Score.ToString();
+      
     }
     void Update()
     {
@@ -24,6 +37,7 @@ public class PauseCanvas : UICanvas
     public void Resume()
     {
         Time.timeScale = 1;
+        SoundManager.Instance.PlayVFXSound(4);
         UIManager.Instance.CloseUI<PauseCanvas>(0.2f);
             
     }
@@ -32,6 +46,7 @@ public class PauseCanvas : UICanvas
     {
         UIManager.Instance.CloseAll();
         Time.timeScale = 1; 
+        SoundManager.Instance.PlayVFXSound(4);
         SceneManager.LoadScene("Home");
         UIManager.Instance.OpenUI<HomeCanvas>();
     } 

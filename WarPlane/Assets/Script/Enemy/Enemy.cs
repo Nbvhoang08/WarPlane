@@ -15,7 +15,10 @@ public class Enemy : MonoBehaviour
     public float rotationSpeed = 1;
     public float velocity = 1;
 
-    
+    [SerializeField] private int MaxHP;
+    [SerializeField] private int HP;
+    public int amount; 
+
 
     
 
@@ -34,7 +37,7 @@ public class Enemy : MonoBehaviour
 
     public float hitRotationAmount = 0;
 
-
+    public bool IsDead;
 
     public GameObject enemyBullet;
 
@@ -53,8 +56,19 @@ public class Enemy : MonoBehaviour
     void Start()
     {
         Rb = GetComponent<Rigidbody2D>();
-        player = FindAnyObjectByType<PlayerMoveMent>().gameObject.transform;
+        var playerMovement = FindObjectOfType<PlayerMoveMent>();
+        if (playerMovement != null && playerMovement.gameObject.activeInHierarchy)
+        {
+            player = playerMovement.gameObject.transform;
+        }
+        
+        HP = MaxHP;
        
+    }
+    private void OnEnable() 
+    {
+        IsDead = false;
+        HP = MaxHP;    
     }
 
 
@@ -62,15 +76,10 @@ public class Enemy : MonoBehaviour
     void Update()
     {
 
-        
-
-        if (rotateTowardsPlayer)
+        if (rotateTowardsPlayer && player != null)
         {
             targetRotation = (player.position - transform.position).normalized;
         }
-
-        
-
 
         if (tickAI)
         {
@@ -78,9 +87,12 @@ public class Enemy : MonoBehaviour
             StartCoroutine("MoveAI");
 
         }
-
-       
-
+        if (HP <= 0 && !IsDead)
+        {
+            IsDead = true;
+            player.GetComponent<PlayerHeatlh>().Score += 10;
+            gameObject.SetActive(false);
+        }
 
     }
 
@@ -92,7 +104,7 @@ public class Enemy : MonoBehaviour
 
         yield return new WaitForSeconds(random);
 
-        if ((player.position - transform.position).magnitude > 1 || tryUnitRotate == false)//if greater than 1 away from player
+       if (player != null && ((player.position - transform.position).magnitude > 1 || tryUnitRotate == false)) // if greater than 1 away from player
         {
             StartCoroutine("NormalMovement");
         }
@@ -127,11 +139,11 @@ public class Enemy : MonoBehaviour
                 break;
         }
 
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(2);
 
         rotateTowardsPlayer = true;
 
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(2);
 
         rotateTowardsPlayer = false;
 
@@ -185,16 +197,11 @@ public class Enemy : MonoBehaviour
                     Rb.MoveRotation(transform.rotation.eulerAngles.z - hitRotationAmount);
             }
             Instantiate(Explosion,transform.position, Quaternion.identity); 
-            
+            HP -= 1;
+                
         }
 
-        // if (collision.CompareTag("Ground"))
-        // {
-        //     ParticleSystem temp = Instantiate(ExplosionParticles, transform.position, transform.rotation).GetComponent<ParticleSystem>();
-        //     temp.Play();
-        //     Destroy(gameObject);
-
-        // }
+        
     }
 
 
@@ -216,17 +223,17 @@ public class Enemy : MonoBehaviour
             RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, detectionDistance, detectionLayer.value);
 
           
-            if (hit.collider != null)
-            {
-                Shoot();
-                currentShotCooldown = shotCooldown + Time.time;
+            // if (hit.collider != null)
+            // {
+            //     Shoot();
+            //     currentShotCooldown = shotCooldown + Time.time;
 
-            }
-            else
-            {
-                currentShotCooldown = detectionInterval + Time.time;
+            // }
+            // else
+            // {
+            //     currentShotCooldown = detectionInterval + Time.time;
 
-            }
+            // }
 
 
         }
@@ -238,10 +245,10 @@ public class Enemy : MonoBehaviour
     }
 
 
-    private void Shoot()
-    {
-        Instantiate(enemyBullet, transform);
-    }
+    // private void Shoot()
+    // {
+    //     Instantiate(enemyBullet, transform);
+    // }
 
     public void Fall()
     {

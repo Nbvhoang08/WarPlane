@@ -27,7 +27,7 @@ public class HomeCanvas : UICanvas
         UIManager.Instance.CloseUIDirectly<HomeCanvas>();
         UIManager.Instance.OpenUI<GamePlayCanvas>();
         SceneManager.LoadScene("GamePlay");
-        //SoundManager.Instance.PlayVFXSound(2);
+        SoundManager.Instance.PlayVFXSound(4);
             
     }
 
@@ -35,7 +35,7 @@ public class HomeCanvas : UICanvas
     {
         SoundManager.Instance.TurnOn = !SoundManager.Instance.TurnOn;
         UpdateButtonImage();
-        //SoundManager.Instance.PlayVFXSound(2);
+         SoundManager.Instance.PlayVFXSound(4);
     }
 
     private void UpdateButtonImage()

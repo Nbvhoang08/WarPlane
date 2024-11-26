@@ -75,7 +75,7 @@ public class SoundManager : Singleton<SoundManager>
     {
         if (VFXSound != null)
         {
-            sfxSource.PlayOneShot(VFXSound[0], sfxVolume);
+            sfxSource.PlayOneShot(VFXSound[4], sfxVolume);
         }
     }
     public void PlayVFXSound(int soundIndex)
